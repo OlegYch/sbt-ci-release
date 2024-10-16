@@ -26,6 +26,14 @@ class CiReleaseTest extends munit.FunSuite {
     assertEquals(dropBackPubCommand("1.1.0@+foo/publishSigned"), expectedVer)
   }
 
+  test("Commands can be chained") {
+    assertEquals(backPubVersionToCommand("1.1.0@2.12.20@foo/publishSigned"), ";++2.12.20!;foo/publishSigned")
+    assertEquals(dropBackPubCommand("1.1.0@2.12.20@foo/publishSigned"), expectedVer)
+
+    assertEquals(backPubVersionToCommand("1.1.0@foo/something@bar/publishSigned"), ";foo/something;bar/publishSigned")
+    assertEquals(dropBackPubCommand("1.1.0@foo/something@bar/publishSigned"), expectedVer)
+  }
+
   test("Treat # as comments") {
     assertEquals(backPubVersionToCommand("1.1.0#comment"), "+publishSigned")
     assertEquals(dropBackPubCommand("1.1.0#comment"), expectedVer)

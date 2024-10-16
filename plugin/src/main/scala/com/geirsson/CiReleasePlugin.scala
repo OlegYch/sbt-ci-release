@@ -244,15 +244,25 @@ object CiReleasePlugin extends AutoPlugin {
 
   def backPubVersionToCommand(ver: String): String =
     if (ver.contains("@")) {
-      val afterAt = ver.split("@").drop(1).mkString("@")
-      val cmd =
-        if (afterAt.contains("#")) afterAt.split("#").head
-        else afterAt
-      if (cmd.isEmpty) sys.error(s"Invalid back-publish version: $ver")
-      else {
-        if (!cmd.head.isDigit) cmd
-        else if (cmd.contains(".x")) s";++${cmd};publishSigned"
-        else s";++${cmd}!;publishSigned"
+      val nonComment =
+        if (ver.contains("#")) ver.split("#").head
+        else ver
+      val commands0 = nonComment.split("@").toList.drop(1)
+      var nonDigit = false
+      val commands = (commands0.map { cmd =>
+        if (cmd.isEmpty) sys.error(s"Invalid back-publish version: $ver")
+        else {
+          if (!cmd.head.isDigit) {
+            nonDigit = true
+            cmd
+          }
+          else if (cmd.contains(".x")) s"++${cmd}"
+          else s"++${cmd}!"
+        }
+      }) ::: (if (nonDigit) Nil else List("publishSigned"))
+      commands match {
+        case x :: Nil => x
+        case xs       => xs.mkString(";", ";", "")
       }
     } else "+publishSigned"
 
